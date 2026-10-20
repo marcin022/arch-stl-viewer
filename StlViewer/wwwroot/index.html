@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>STL Viewer — biblioteka modeli</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon">◈</span><span>STL<span class="brand-light">VIEWER</span></span></div>
+      <div class="top-actions"><span class="local-badge"><i></i> LOKALNIE</span><button id="chooseLibrary" class="primary">＋ &nbsp; Wybierz bibliotekę</button></div>
+    </header>
+    <main class="workspace">
+      <aside class="sidebar">
+        <div class="sidebar-title"><span>EXPLORER</span><div class="sidebar-tools"><div class="view-toggle" role="group" aria-label="Widok biblioteki"><button id="listView" title="Widok listy" aria-label="Widok listy" aria-pressed="true">☷</button><button id="gridView" title="Widok siatki" aria-label="Widok siatki" aria-pressed="false">▦</button></div><button id="refresh" title="Odśwież bibliotekę" aria-label="Odśwież bibliotekę">↻</button></div></div>
+        <div class="library-title"><span>⌂</span><strong id="libraryName">Brak biblioteki</strong></div>
+        <div id="gridNavigation" class="grid-navigation hidden"><button id="gridBack" aria-label="Folder wyżej" title="Folder wyżej">←</button><span id="gridLocation"></span></div>
+        <div id="tree" class="tree"></div>
+        <div id="grid" class="grid hidden"></div>
+        <div class="sidebar-footer"><span id="fileCount">Wybierz folder z modelami STL</span></div>
+      </aside>
+      <section class="detail">
+        <div class="detail-header">
+          <div><div class="eyebrow">PODGLĄD MODELU</div><h1 id="modelName">Wybierz model z biblioteki</h1><div id="modelPath" class="path"></div></div>
+          <div id="fileActions" class="file-actions hidden">
+            <button id="renameButton" title="Zmień nazwę pliku STL">✎ <span>Zmień nazwę</span></button>
+            <button id="copyButton" title="Skopiuj plik do innego folderu">⧉ <span>Kopiuj</span></button>
+            <button id="trashButton" class="danger" title="Przenieś plik do kosza">♧ <span>Do kosza</span></button>
+          </div>
+        </div>
+        <div class="viewer-wrap">
+          <canvas id="viewer"></canvas>
+          <div id="emptyState" class="empty-state"><div class="empty-icon">⬡</div><h2>Twoja przestrzeń na modele</h2><p>Wybierz bibliotekę i kliknij plik STL po lewej, aby zobaczyć go tutaj.</p><button id="emptyChoose">Wybierz folder →</button></div>
+          <div id="viewControls" class="view-controls hidden"><button id="resetView" title="Wycentruj model">⌖</button><button id="zoomIn" title="Przybliż">＋</button><button id="zoomOut" title="Oddal">－</button></div>
+          <div id="viewHint" class="view-hint hidden">PRZECIĄGNIJ, ABY OBRÓCIĆ · ROLKA, ABY PRZYBLIŻYĆ</div>
+        </div>
+        <div id="modelFooter" class="model-footer hidden">
+          <div class="stats"><div><small>WYMIARY</small><strong id="dimensions">—</strong></div><div><small>TRÓJKĄTY</small><strong id="triangles">—</strong></div><div><small>FORMAT</small><strong id="format">—</strong></div></div>
+          <div class="slicer-actions"><select id="slicerSelect"><option value="">Wybierz slicer</option></select><button id="addSlicer" title="Dodaj program lub AppImage slicera">＋</button><button id="openSlicer" class="primary">Otwórz w slicerze ↗</button></div>
+        </div>
+      </section>
+    </main>
+    <div id="toast" class="toast hidden"></div>
+    <div id="contextMenu" class="context-menu hidden" role="menu" aria-label="Operacje na pliku lub folderze">
+      <button data-action="rename" role="menuitem">Zmień nazwę</button>
+      <button data-action="copy" role="menuitem">Kopiuj</button>
+      <button data-action="cut" role="menuitem">Wytnij</button>
+      <button data-action="paste" role="menuitem">Wklej</button>
+      <div class="context-divider"></div>
+      <button data-action="delete" class="danger" role="menuitem">Usuń do Kosza</button>
+    </div>
+  </div>
+  <dialog id="pathDialog"><form method="dialog"><h2>Wybierz bibliotekę</h2><p>Podaj pełną ścieżkę do folderu z modelami STL.</p><input id="libraryPath" placeholder="/home/użytkownik/Modele" autocomplete="off"><div class="dialog-actions"><button value="cancel">Anuluj</button><button id="saveLibrary" value="save" class="primary">Otwórz folder</button></div></form></dialog>
+  <dialog id="slicerDialog"><form method="dialog"><h2>Dodaj slicer</h2><p>Podaj pełną ścieżkę do programu lub pliku AppImage. Musi mieć uprawnienie do uruchamiania.</p><input id="slicerPath" placeholder="/home/użytkownik/Downloads/OrcaSlicer.AppImage" autocomplete="off"><div class="dialog-actions"><button value="cancel">Anuluj</button><button value="save" class="primary">Dodaj</button></div></form></dialog>
+  <dialog id="renameDialog"><form method="dialog"><h2 id="renameTitle">Zmień nazwę modelu</h2><p id="renameHint">Podaj nową nazwę. Rozszerzenie .stl zostanie zachowane.</p><div class="rename-input"><input id="newFileName" maxlength="240" autocomplete="off" required><span id="renameSuffix">.stl</span></div><div class="dialog-actions"><button value="cancel">Anuluj</button><button value="save" class="primary">Zapisz nazwę</button></div></form></dialog>
+  <script src="/viewer.js"></script>
+  <script src="/thumb.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

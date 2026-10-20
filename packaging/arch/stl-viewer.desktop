@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=STL Viewer
+Comment=Przeglądaj lokalną bibliotekę modeli STL
+Exec=stl-viewer
+Icon=stl-viewer
+Terminal=false
+Categories=Graphics;3DGraphics;Viewer;
+Keywords=STL;3D;models;modele;
