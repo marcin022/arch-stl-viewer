@@ -47,6 +47,8 @@ Ustawienia zapisują się w folderze danych aplikacji użytkownika (`~/.config/s
 
 Lokalną paczkę dla Archa zbudujesz poleceniem `./packaging/arch/build-local.sh`. Gotowy plik `stl-viewer-0.1.0-1-x86_64.pkg.tar.zst` pojawi się w `dist/`. Pakiet instaluje polecenie `stl-viewer` oraz wpis w menu aplikacji. Do uruchomienia korzysta z systemowych pakietów .NET, Python, GTK i WebKitGTK.
 
+Lokalną paczkę zainstalujesz poleceniem `sudo pacman -U dist/stl-viewer-0.1.0-1-x86_64.pkg.tar.zst`. Po instalacji uruchom **STL Viewer** z menu aplikacji albo wpisz `stl-viewer` w terminalu. Skrypt `uruchom.sh` służy do uruchamiania projektu bez instalacji.
+
 [PKGBUILD](packaging/arch/PKGBUILD) wskazuje repozytorium `marcin022/arch-stl-viewer` i przyszły tag `v0.1.0`. Przed zgłoszeniem do AUR trzeba opublikować ten tag, wpisać sumę SHA-256 archiwum pobranego z GitHub w miejsce `SKIP` oraz wygenerować `.SRCINFO`.
 
 ### Archiwa Linux i Windows
