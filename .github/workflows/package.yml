@@ -28,7 +28,7 @@ jobs:
         run: dotnet publish StlViewer/StlViewer.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o publish
       - name: Dołącz licencję i instrukcję
         shell: bash
-        run: cp LICENSE README.md publish/
+        run: cp LICENSE README.md README.pl.md publish/
       - name: Pakuj Linux
         if: runner.os == 'Linux'
         run: |

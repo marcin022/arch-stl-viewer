@@ -6,7 +6,7 @@ work_dir="$(mktemp -d)"
 trap 'rm -rf "$work_dir"' EXIT
 source_dir="$work_dir/arch-stl-viewer-$version"
 mkdir -p "$source_dir/packaging"
-cp "$project_dir/desktop.py" "$project_dir/README.md" "$project_dir/LICENSE" "$source_dir/"
+cp "$project_dir/desktop.py" "$project_dir/README.md" "$project_dir/README.pl.md" "$project_dir/LICENSE" "$source_dir/"
 cp -a "$project_dir/StlViewer" "$source_dir/"
 rm -rf "$source_dir/StlViewer/bin" "$source_dir/StlViewer/obj"
 cp -a "$project_dir/packaging/arch" "$source_dir/packaging/"
