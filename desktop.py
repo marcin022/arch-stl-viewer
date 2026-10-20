@@ -46,10 +46,10 @@ def server_command(port, arguments):
         built = subprocess.run(["dotnet", "build", str(project), "--nologo"], cwd=BASE,
                                capture_output=True, text=True)
         if built.returncode != 0:
-            raise RuntimeError("Nie udało się zbudować usługi .NET:\n" + built.stdout + built.stderr)
+            raise RuntimeError("Could not build the .NET service:\n" + built.stdout + built.stderr)
         assembly = BASE / "StlViewer" / "bin" / "Debug" / "net10.0" / "StlViewer.dll"
         return ["dotnet", str(assembly), *options]
-    raise FileNotFoundError("Nie znaleziono programu StlViewer ani jego projektu.")
+    raise FileNotFoundError("StlViewer executable or project not found.")
 
 
 class Desktop:
@@ -65,11 +65,11 @@ class Desktop:
         status = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         status.set_halign(Gtk.Align.CENTER)
         status.set_valign(Gtk.Align.CENTER)
-        self.status_label = Gtk.Label(label="Uruchamianie STL Viewer…")
+        self.status_label = Gtk.Label(label="Starting STL Viewer…")
         self.status_label.set_line_wrap(True)
         self.status_label.set_max_width_chars(70)
         status.pack_start(self.status_label, False, False, 0)
-        retry = Gtk.Button(label="Spróbuj ponownie")
+        retry = Gtk.Button(label="Try again")
         retry.connect("clicked", self.retry_load)
         status.pack_start(retry, False, False, 0)
         self.stack.add_named(status, "status")
@@ -86,19 +86,19 @@ class Desktop:
         self.window.show_all()
         self.window.present()
         if self.window.get_window() is None:
-            raise RuntimeError("GTK nie utworzył okna aplikacji.")
+            raise RuntimeError("GTK could not create the application window.")
         try:
             self.process = subprocess.Popen(server_command(port, arguments), cwd=BASE)
         except Exception as error:
-            self.show_error(f"Nie udało się uruchomić usługi .NET: {error}")
+            self.show_error(f"Could not start the .NET service: {error}")
             return
         self.started = time.monotonic()
-        print(f"STL Viewer: otwarto okno aplikacji; adres usługi: {self.origin}", flush=True)
+        print(f"STL Viewer: application window opened; service address: {self.origin}", flush=True)
         GLib.timeout_add(100, self.wait_for_server)
 
     def wait_for_server(self):
         if self.process.poll() is not None:
-            self.show_error("Usługa STL Viewer zakończyła działanie podczas uruchamiania.")
+            self.show_error("The STL Viewer service stopped during startup.")
             return False
         try:
             with urllib.request.urlopen(self.origin + "/api/state", timeout=0.2) as response:
@@ -109,7 +109,7 @@ class Desktop:
         except (OSError, urllib.error.URLError):
             pass
         if time.monotonic() - self.started > 30:
-            self.show_error("Nie udało się uruchomić STL Viewer w ciągu 30 sekund.")
+            self.show_error("STL Viewer did not start within 30 seconds.")
             return False
         return True
 
@@ -124,23 +124,23 @@ class Desktop:
 
     def load_failed(self, view, event, uri, error):
         if uri.startswith(self.origin):
-            self.show_error("Nie można wczytać interfejsu: " + error.message)
+            self.show_error("Could not load the interface: " + error.message)
         return True
 
     def load_changed(self, view, event):
         if event == WebKit2.LoadEvent.FINISHED and not self.load_error:
             self.stack.set_visible_child_name("viewer")
-            print("STL Viewer: interfejs załadowany w oknie aplikacji.", flush=True)
+            print("STL Viewer: interface loaded in the application window.", flush=True)
 
     def web_process_terminated(self, view, reason):
-        self.show_error(f"Proces WebKit zakończył działanie ({reason.value_nick}).")
+        self.show_error(f"The WebKit process stopped ({reason.value_nick}).")
 
     def retry_load(self, *_):
         if self.process is None or self.process.poll() is not None:
-            self.show_error("Usługa .NET nie działa. Zamknij i uruchom aplikację ponownie.")
+            self.show_error("The .NET service is not running. Close and restart the application.")
             return
         self.load_error = False
-        self.status_label.set_text("Ładowanie interfejsu…")
+        self.status_label.set_text("Loading interface…")
         self.stack.set_visible_child_name("viewer")
         self.view.load_uri(self.origin)
 
@@ -163,13 +163,13 @@ class Desktop:
 
 def main():
     if sys.platform != "linux":
-        raise SystemExit("Ten launcher desktopowy jest przeznaczony dla Linuksa.")
+        raise SystemExit("This desktop launcher is for Linux.")
     if not Gtk.init_check([])[0]:
-        raise SystemExit("Nie można połączyć się z pulpitem graficznym GTK. Uruchom ./uruchom.sh w terminalu swojej sesji KDE.")
+        raise SystemExit("Cannot connect to a GTK graphical desktop. Run ./uruchom.sh in a terminal in your KDE session.")
     try:
         desktop = Desktop(sys.argv[1:])
     except Exception as error:
-        raise SystemExit(f"Nie udało się otworzyć okna STL Viewer: {error}") from error
+        raise SystemExit(f"Could not open the STL Viewer window: {error}") from error
     GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT,
                         lambda: desktop.window.destroy() or GLib.SOURCE_REMOVE)
     GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM,

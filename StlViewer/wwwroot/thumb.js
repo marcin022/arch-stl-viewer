@@ -34,12 +34,12 @@ function stlThumbnail(buffer) {
   count = visit(points => {
     for (let i = 0; i < 9; i++) {
       const value = points[i], axis = i % 3;
-      if (!Number.isFinite(value)) throw Error('Nieprawidłowe współrzędne STL.');
+      if (!Number.isFinite(value)) throw Error(t('invalidStlCoordinates'));
       min[axis] = Math.min(min[axis], value);
       max[axis] = Math.max(max[axis], value);
     }
   });
-  if (!count) throw Error('Pusty plik STL.');
+  if (!count) throw Error(t('emptyStl'));
 
   const center = min.map((value, axis) => (value + max[axis]) / 2);
   const yaw = -.65, pitch = .5;

@@ -1,12 +1,18 @@
 # STL Viewer
 
-Lokalna aplikacja do przeglądania folderu z modelami STL. Po lewej stronie ma drzewo folderów i plików, po prawej obracany podgląd modelu, jego wymiary i liczbę trójkątów. Obsługuje STL binarny i tekstowy. Na Linuksie otwiera własne okno GTK z wbudowanym WebKit; przeglądarka internetowa nie jest potrzebna. Interfejs nadal korzysta z HTML i WebGL, a lokalna usługa .NET uruchamia się razem z oknem i zamyka po jego zamknięciu.
+[Polski / Polish](README.pl.md)
 
-Kod projektu jest udostępniany na licencji [GNU GPL 3.0](LICENSE), wyłącznie w wersji 3 (`GPL-3.0-only`).
+A local desktop application for browsing STL models. It shows a folder tree or thumbnail grid on the left and an interactive 3D preview, dimensions, and triangle count on the right. Binary and ASCII STL files are supported. On Linux it opens a GTK window with embedded WebKit; no separate browser window is needed. The interface uses HTML and WebGL, while a local .NET service starts and stops with the desktop window.
 
-## Uruchomienie
+The project is licensed under [GNU GPL 3.0](LICENSE), version 3 only (`GPL-3.0-only`).
 
-Do uruchomienia **ze źródeł** na Linuksie potrzebne są .NET SDK 10, Python 3 z PyGObject, GTK 3 i WebKitGTK 4.1. Na Arch Linux są to pakiety `python-gobject`, `gtk3` i `webkit2gtk-4.1`. Wybór folderu korzysta z `zenity` lub `kdialog`, a kosz z `gio`. Aplikacja nie pobiera bibliotek NuGet.
+## Language
+
+English is the default. Click the flag in the top bar to switch between English and Polish. The choice is saved on this computer. The flag shows the current language: 🇬🇧 for English and 🇵🇱 for Polish.
+
+## Run from source
+
+On Linux, running from source requires the .NET 10 SDK, Python 3 with PyGObject, GTK 3, and WebKitGTK 4.1. On Arch Linux, the desktop dependencies are `python-gobject`, `gtk3`, and `webkit2gtk-4.1`. Folder selection uses `zenity` or `kdialog`, and Trash uses `gio`. The application does not download NuGet packages.
 
 ```bash
 git clone https://github.com/marcin022/arch-stl-viewer.git
@@ -14,49 +20,47 @@ cd arch-stl-viewer
 ./uruchom.sh
 ```
 
-Na Windows obecna paczka nadal otwiera interfejs w przeglądarce. Launcher desktopowy jest obecnie przygotowany dla Linuksa.
+The Linux launcher opens the **STL Viewer** window and starts its local service on a random free localhost port. Close the window or press Ctrl+C in the terminal to stop both. The current Windows package opens the interface in a browser; the desktop launcher is for Linux.
 
-Otworzy się okno **STL Viewer**. Nie trzeba wpisywać adresu ani osobno uruchamiać usługi. Można zamknąć program krzyżykiem okna lub Ctrl+C w terminalu. Usługa nasłuchuje wyłącznie na komputerze lokalnym na losowym wolnym porcie.
+On KDE/Wayland with NVIDIA, the launcher sets `__NV_DISABLE_EXPLICIT_SYNC=1` for itself and the service to avoid a WebKitGTK protocol error. It does not change system or driver settings. If the window still closes unexpectedly, start the script in a terminal and keep the last lines of output.
 
-Na KDE/Wayland z kartą NVIDIA launcher ustawia `__NV_DISABLE_EXPLICIT_SYNC=1` tylko dla siebie i uruchomionej usługi. Zapobiega to awarii WebKitGTK z komunikatem `Error 71 (Protocol error)`. Nie zmienia ustawień systemu ani sterownika. Jeśli okno zamknie się mimo tego, uruchom skrypt w terminalu i zachowaj końcowe linie komunikatów.
-
-Możesz od razu wskazać bibliotekę:
+To select a library on launch:
 
 ```bash
-./uruchom.sh --library /pełna/ścieżka/do/modeli
+./uruchom.sh --library /full/path/to/models
 ```
 
-Folder można także wybrać przyciskiem w aplikacji. Jeżeli okno systemowe wyboru folderu jest niedostępne, aplikacja wyświetli pole na pełną ścieżkę.
+You can also choose a folder inside the app. If the system folder picker is unavailable, enter the full path in the dialog.
 
-## Obsługa
+## Use
 
-- Kliknij folder po lewej, aby go rozwinąć. Kliknij STL, aby zobaczyć podgląd.
-- Przełącznik nad lewym panelem wybiera listę albo siatkę. W siatce pliki mają miniatury rysowane z całej siatki STL z uwzględnieniem głębi, a foldery pokazują do czterech losowo wybranych modeli także z podfolderów. Kliknij folder, aby wejść do środka; strzałka nad siatką wraca poziom wyżej. Miniatury wczytują się podczas przewijania.
-- Kliknij prawym przyciskiem plik lub folder w liście albo siatce, aby zmienić nazwę, skopiować, wyciąć, wkleić lub przenieść do Kosza. Wklejenie na folderze umieszcza element w tym folderze; wklejenie na pustym miejscu umieszcza go w bieżącym folderze. Kopiuj/wytnij/wklej działa w obrębie aplikacji i wybranej biblioteki. Kopie dostają numer w nazwie, jeśli taka nazwa już istnieje.
-- Przeciągaj model myszą, aby go obrócić. Rolka i przyciski `+` / `−` zmieniają powiększenie.
-- **Zmień nazwę** zmienia nazwę wybranego pliku w bibliotece i zachowuje rozszerzenie `.stl`. Aplikacja odrzuca nieprawidłowe nazwy i nie nadpisuje istniejącego pliku.
-- **Kopiuj** otwiera wybór folderu docelowego. Gdy plik o tej nazwie już istnieje, kopia dostaje numer w nazwie.
-- **Do kosza** po potwierdzeniu przenosi plik do Kosza systemowego. Nie usuwa go bezpowrotnie. Po usunięciu otwartego modelu podgląd przechodzi do następnego widocznego pliku STL (lub poprzedniego, gdy był ostatni), zachowując rozwinięte foldery i pozycję listy.
-- Lista slicerów wykrywa programy w `PATH`: OrcaSlicer, Cura, Anycubic Slicer, PrusaSlicer i Bambu Studio. Przyciskiem `+` można podać pełną ścieżkę do innego programu lub AppImage. Slicer dostaje ścieżkę wybranego STL jako argument.
+- Click a folder in the list to expand it, then click an STL file to preview it.
+- Use the buttons above the left panel to switch between list and grid. The grid shows model thumbnails, and folder cards show up to four randomly selected models from that folder and its subfolders. Click a folder to enter it; use the arrow above the grid to go back. Thumbnails load as you scroll.
+- Right-click a file or folder in either view to rename, copy, cut, paste, or move it to Trash. Paste onto a folder to place the item there, or onto empty space to place it in the current folder. The in-app clipboard works within the chosen library. Copies receive a numbered name if necessary.
+- Drag a model to rotate it. Use the mouse wheel or `+` and `−` buttons to zoom.
+- **Rename** preserves the `.stl` extension for files, rejects invalid names, and does not overwrite existing files.
+- **Copy** in the preview toolbar opens a destination folder picker. Existing files are kept; the copy receives a numbered name.
+- **To Trash** asks for confirmation and uses the system Trash. After removing the selected model, the preview moves to the next visible STL file, or the previous one if it was last, while preserving the list's expanded folders and scroll position.
+- The slicer list detects OrcaSlicer, Cura, Anycubic Slicer, PrusaSlicer, and Bambu Studio in `PATH`. Use `+` to add another executable or AppImage. The selected STL path is passed to the slicer as an argument.
 
-Ustawienia zapisują się w folderze danych aplikacji użytkownika (`~/.config/stl-viewer` na typowym Linuksie, `%APPDATA%\stl-viewer` na Windows) albo w folderze wskazanym przez `STLV_CONFIG_DIR`.
+Settings are stored in the user's application data directory (typically `~/.config/stl-viewer` on Linux and `%APPDATA%\stl-viewer` on Windows), or in the directory set by `STLV_CONFIG_DIR`.
 
-## Paczki do dystrybucji
+## Distribution packages
 
 ### Arch Linux
 
-Lokalną paczkę dla Archa zbudujesz poleceniem `./packaging/arch/build-local.sh`. Gotowy plik `stl-viewer-0.1.0-1-x86_64.pkg.tar.zst` pojawi się w `dist/`. Pakiet instaluje polecenie `stl-viewer` oraz wpis w menu aplikacji. Do uruchomienia korzysta z systemowych pakietów .NET, Python, GTK i WebKitGTK.
+Build a local Arch package with `./packaging/arch/build-local.sh`. The file `stl-viewer-0.1.0-1-x86_64.pkg.tar.zst` will appear in `dist/`. The package installs the `stl-viewer` command and an application menu entry. It uses system .NET, Python, GTK, and WebKitGTK packages.
 
-Lokalną paczkę zainstalujesz poleceniem `sudo pacman -U dist/stl-viewer-0.1.0-1-x86_64.pkg.tar.zst`. Po instalacji uruchom **STL Viewer** z menu aplikacji albo wpisz `stl-viewer` w terminalu. Skrypt `uruchom.sh` służy do uruchamiania projektu bez instalacji.
+Install the local package with `sudo pacman -U dist/stl-viewer-0.1.0-1-x86_64.pkg.tar.zst`. Then launch **STL Viewer** from the application menu or run `stl-viewer` in a terminal. `uruchom.sh` runs the source checkout without installation.
 
-[PKGBUILD](packaging/arch/PKGBUILD) wskazuje repozytorium `marcin022/arch-stl-viewer` i przyszły tag `v0.1.0`. Przed zgłoszeniem do AUR trzeba opublikować ten tag, wpisać sumę SHA-256 archiwum pobranego z GitHub w miejsce `SKIP` oraz wygenerować `.SRCINFO`.
+The [PKGBUILD](packaging/arch/PKGBUILD) points to `marcin022/arch-stl-viewer` and the future `v0.1.0` tag. Before submitting to AUR, publish that tag, replace `SKIP` with the SHA-256 checksum of the GitHub source archive, and generate `.SRCINFO`.
 
-### Archiwa Linux i Windows
+### Linux and Windows archives
 
-Plik [package.yml](.github/workflows/package.yml) buduje dwa archiwa: `STL-Viewer-linux-x64.tar.gz` i `STL-Viewer-win-x64.zip`. Każde zawiera aplikację i runtime .NET 10. Paczka linuksowa zawiera także launcher okna; system odbiorcy musi mieć Python 3, PyGObject, GTK 3 i WebKitGTK 4.1. Do wyboru folderu potrzebne jest `zenity` lub `kdialog`, a do kosza `gio`. Paczka Windows nadal wymaga przeglądarki.
+[package.yml](.github/workflows/package.yml) builds `STL-Viewer-linux-x64.tar.gz` and `STL-Viewer-win-x64.zip`. Each includes the app and .NET 10 runtime. The Linux archive also includes the desktop launcher; the recipient still needs Python 3, PyGObject, GTK 3, and WebKitGTK 4.1. Folder selection requires `zenity` or `kdialog`, and Trash requires `gio`. The Windows archive still requires a browser.
 
-Po umieszczeniu projektu w repozytorium GitHub wejdź w **Actions → Paczki Linux i Windows → Run workflow**. Archiwa pojawią się w artefaktach zakończonego przebiegu. Workflow uruchamia się też po wypchnięciu tagu zaczynającego się od `v`. Nie publikuje automatycznie wydania.
+In the GitHub repository, go to **Actions → Paczki Linux i Windows → Run workflow**. Archives appear as artifacts after the workflow completes. It also runs when a tag beginning with `v` is pushed. It does not automatically publish a release.
 
-Odbiorca Windows rozpakowuje ZIP i uruchamia `StlViewer.exe`. Odbiorca Linuksa rozpakowuje `tar.gz` i uruchamia `./uruchom.sh`. Trzeba zachować całą zawartość archiwum razem z folderem `wwwroot`; sam plik wykonywalny nie zawiera interfejsu.
+On Windows, extract the ZIP and start `StlViewer.exe`. On Linux, extract the tarball and run `./uruchom.sh`. Keep the complete archive, including `wwwroot`; the executable alone does not contain the interface.
 
-Podgląd korzysta z WebGL i wyświetla wszystkie trójkąty pliku STL z testem głębi. Duże pliki mogą wymagać więcej pamięci karty graficznej i czasu wczytywania. Wymiary i liczba trójkątów dotyczą całego pliku; podgląd nie służy do oceny poprawności siatki ani przygotowania wydruku.
+The WebGL preview displays all STL triangles with depth testing. Large models can take more GPU memory and loading time. Dimensions and triangle count apply to the entire file; the preview does not validate the mesh or prepare it for printing.

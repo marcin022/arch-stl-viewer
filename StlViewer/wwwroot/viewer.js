@@ -25,7 +25,7 @@ function parseStl(buffer, onChunk) {
       const a = vertexPattern.exec(text);
       if (!a) break;
       const b = vertexPattern.exec(text), c = vertexPattern.exec(text);
-      if (!b || !c) throw Error('Nieprawidłowy plik STL: niepełny trójkąt.');
+      if (!b || !c) throw Error(t('incompleteTriangle'));
       visitor(+a[1], +a[2], +a[3], +b[1], +b[2], +b[3], +c[1], +c[2], +c[3]);
       count++;
     }
@@ -36,12 +36,12 @@ function parseStl(buffer, onChunk) {
   const count = visitTriangles((...p) => {
     for (let i = 0; i < 9; i++) {
       const n = p[i], axis = i % 3;
-      if (!Number.isFinite(n)) throw Error('Model zawiera nieprawidłowe współrzędne.');
+      if (!Number.isFinite(n)) throw Error(t('invalidCoordinates'));
       min[axis] = Math.min(min[axis], n);
       max[axis] = Math.max(max[axis], n);
     }
   });
-  if (!count) throw Error('Plik STL nie zawiera trójkątów.');
+  if (!count) throw Error(t('noTriangles'));
 
   const trianglesPerChunk = 32768;
   let chunk = new Float32Array(trianglesPerChunk * 18), used = 0;
@@ -67,7 +67,7 @@ function parseStl(buffer, onChunk) {
     count,
     size: min.map((n, i) => max[i] - n),
     center: min.map((n, i) => (n + max[i]) / 2),
-    format: binary ? 'BINARNY STL' : 'TEKSTOWY STL'
+    format: binary ? 'binaryStl' : 'asciiStl'
   };
 }
 
@@ -108,14 +108,14 @@ class StlPreview {
       const item = gl.createShader(type);
       gl.shaderSource(item, source); gl.compileShader(item);
       if (!gl.getShaderParameter(item, gl.COMPILE_STATUS))
-        throw Error('Błąd podglądu 3D: ' + gl.getShaderInfoLog(item));
+        throw Error(t('previewError') + ': ' + gl.getShaderInfoLog(item));
       return item;
     }
     const program = gl.createProgram();
     const vertex = shader(gl.VERTEX_SHADER, vertexSource), fragment = shader(gl.FRAGMENT_SHADER, fragmentSource);
     gl.attachShader(program, vertex); gl.attachShader(program, fragment); gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-      throw Error('Błąd podglądu 3D: ' + gl.getProgramInfoLog(program));
+      throw Error(t('previewError') + ': ' + gl.getProgramInfoLog(program));
     gl.deleteShader(vertex); gl.deleteShader(fragment);
     this.program = program;
     this.locations = {
@@ -137,17 +137,17 @@ class StlPreview {
     this.mesh = null;
   }
   load(buffer) {
-    if (!this.gl) throw Error('Podgląd 3D wymaga WebGL. Włącz akcelerację grafiki w przeglądarce.');
+    if (!this.gl) throw Error(t('webglRequired'));
     this.clear();
     try {
       this.mesh = parseStl(buffer, data => {
         const gl = this.gl, gpuBuffer = gl.createBuffer();
-        if (!gpuBuffer) throw Error('Brak pamięci na podgląd modelu.');
+        if (!gpuBuffer) throw Error(t('outOfMemory'));
         gl.bindBuffer(gl.ARRAY_BUFFER, gpuBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
         if (gl.getError() !== gl.NO_ERROR) {
           gl.deleteBuffer(gpuBuffer);
-          throw Error('Nie udało się przesłać modelu do karty graficznej.');
+          throw Error(t('gpuUploadFailed'));
         }
         this.buffers.push({ buffer: gpuBuffer, vertices: data.length / 6 });
       });

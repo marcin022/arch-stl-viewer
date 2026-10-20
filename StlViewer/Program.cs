@@ -54,7 +54,8 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.MapGet("/api/state", () => Results.Ok(new { root = library.Root, slicers = library.Slicers() }));
+app.MapGet("/api/state", () => Results.Ok(new { root = library.Root, slicers = library.Slicers(), language = library.Language }));
+app.MapPost("/api/language", (LanguageRequest request) => Safe(() => { library.SetLanguage(request.Language); return Results.Ok(new { language = library.Language }); }));
 app.MapGet("/api/list", (string? path) => Safe(() => Results.Ok(library.List(path))));
 app.MapGet("/api/folder-samples", (string path) => Safe(() => Results.Ok(library.FolderSamples(path))));
 app.MapGet("/api/model", (string path) => Safe(() => Results.File(library.Model(path), "application/octet-stream", enableRangeProcessing: true)));
@@ -63,17 +64,17 @@ app.MapPost("/api/library", (PathRequest request) => Safe(() =>
     library.SetRoot(request.Path);
     return Results.Ok(new { root = library.Root });
 }));
-app.MapPost("/api/choose-library", async () => await SafeAsync(async () =>
+app.MapPost("/api/choose-library", async (HttpContext context) => await SafeAsync(async () =>
 {
-    var path = await PickFolder();
+    var path = await PickFolder(context.Request.Headers["X-Stl-Language"] == "pl");
     if (path is null) return Results.NoContent();
     library.SetRoot(path);
     return Results.Ok(new { root = library.Root });
 }));
-app.MapPost("/api/copy", async (CopyRequest request) => await SafeAsync(async () =>
+app.MapPost("/api/copy", async (CopyRequest request, HttpContext context) => await SafeAsync(async () =>
 {
     var source = library.Model(request.Path);
-    var targetFolder = request.Destination ?? await PickFolder();
+    var targetFolder = request.Destination ?? await PickFolder(context.Request.Headers["X-Stl-Language"] == "pl");
     if (targetFolder is null) return Results.NoContent();
     if (!Directory.Exists(targetFolder)) throw new DirectoryNotFoundException($"Folder nie istnieje: {targetFolder}");
     var name = Path.GetFileNameWithoutExtension(source);
@@ -142,17 +143,18 @@ static async Task<IResult> SafeAsync(Func<Task<IResult>> action)
     catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or PlatformNotSupportedException or System.ComponentModel.Win32Exception)
     { return Results.BadRequest(new { error = e.Message }); }
 }
-static async Task<string?> PickFolder()
+static async Task<string?> PickFolder(bool polish)
 {
     (int Code, string Output, string Error) result;
+    var title = polish ? "Wybierz folder" : "Choose folder";
     if (OperatingSystem.IsWindows())
     {
-        const string script = "Add-Type -AssemblyName System.Windows.Forms; $dialog = New-Object System.Windows.Forms.FolderBrowserDialog; $dialog.Description = 'Wybierz folder'; if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { [Console]::WriteLine($dialog.SelectedPath) }";
+        var script = "Add-Type -AssemblyName System.Windows.Forms; $dialog = New-Object System.Windows.Forms.FolderBrowserDialog; $dialog.Description = '" + title + "'; if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { [Console]::WriteLine($dialog.SelectedPath) }";
         result = await Run("powershell.exe", ["-NoProfile", "-STA", "-Command", script]);
     }
     else if (OperatingSystem.IsLinux())
     {
-        try { result = await Run("zenity", ["--file-selection", "--directory", "--title=Wybierz folder"]); }
+        try { result = await Run("zenity", ["--file-selection", "--directory", "--title=" + title]); }
         catch (System.ComponentModel.Win32Exception) { result = await Run("kdialog", ["--getexistingdirectory", "."]); }
     }
     else throw new PlatformNotSupportedException("Wybór folderu jest obsługiwany na Linux i Windows.");
@@ -174,6 +176,7 @@ record CopyRequest(string Path, string? Destination);
 record RenameRequest(string Path, string NewName);
 record PasteRequest(string Path, string Destination, bool Move);
 record SlicerRequest(string Path, string SlicerId);
+record LanguageRequest(string Language);
 record Slicer(string Id, string Name, string Executable);
 
 sealed class LibraryStore
@@ -181,6 +184,7 @@ sealed class LibraryStore
     private readonly string configFile;
     private Config config;
     public string? Root => config.Root;
+    public string Language => config.Language == "pl" ? "pl" : "en";
     public LibraryStore()
     {
         var folder = Environment.GetEnvironmentVariable("STLV_CONFIG_DIR") ??
@@ -196,6 +200,12 @@ sealed class LibraryStore
         path = Path.GetFullPath(path);
         if (!Directory.Exists(path)) throw new DirectoryNotFoundException($"Folder nie istnieje: {path}");
         config.Root = path;
+        Save();
+    }
+    public void SetLanguage(string language)
+    {
+        if (language is not ("en" or "pl")) throw new ArgumentException("Unsupported language.");
+        config.Language = language;
         Save();
     }
     public object[] List(string? path)
@@ -414,6 +424,7 @@ sealed class LibraryStore
     {
         public Config() { }
         public string? Root { get; set; }
+        public string Language { get; set; } = "en";
         public List<string> CustomSlicers { get; set; } = [];
     }
 }

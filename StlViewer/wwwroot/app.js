@@ -8,11 +8,11 @@ let gridGeneration = 0, thumbnailQueue = [], activeThumbnails = 0, thumbnailObse
 let clipboardItem = null, contextTarget = null, renameTarget = null;
 
 async function api(url, body) {
-  const options = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Stl-Viewer': '1' }, body: JSON.stringify(body) };
+  const options = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Stl-Viewer': '1', 'X-Stl-Language': language }, body: JSON.stringify(body) };
   const response = await fetch(url, options);
   if (!response.ok) {
     const result = await response.json().catch(() => ({}));
-    throw Error(result.error || `Błąd HTTP ${response.status}`);
+    throw Error(localizeServerError(result.error) || t('httpError', { status: response.status }));
   }
   if (response.status === 204) return null;
   const type = response.headers.get('content-type') || '';
@@ -27,7 +27,7 @@ function clearModel() {
   viewer.clear();
   state.selected = state.mesh = null;
   state.selectedRow = state.selectedItem = null;
-  $('modelName').textContent = 'Wybierz model z biblioteki'; $('modelPath').textContent = '';
+  $('modelName').textContent = t('chooseModel'); $('modelPath').textContent = '';
   $('emptyState').classList.remove('hidden');
   for (const id of ['fileActions', 'viewControls', 'viewHint', 'modelFooter']) $(id).classList.add('hidden');
   render();
@@ -35,18 +35,19 @@ function clearModel() {
 
 async function loadState() {
   const data = await api('/api/state');
+  if (data.language !== language) { setLanguage(data.language); refreshLanguage(); }
   if (state.root && state.root !== data.root) clipboardItem = null;
   state.root = data.root;
   state.gridPath = data.root;
-  $('libraryName').textContent = data.root ? data.root.split(/[\\/]/).filter(Boolean).at(-1) || '/' : 'Brak biblioteki';
-  $('fileCount').textContent = data.root || 'Wybierz folder z modelami STL';
+  $('libraryName').textContent = data.root ? data.root.split(/[\\/]/).filter(Boolean).at(-1) || '/' : t('noLibrary');
+  $('fileCount').textContent = data.root || t('chooseFolderHint');
   setSlicers(data.slicers);
   await refresh();
 }
 function setSlicers(slicers) {
   const select = $('slicerSelect');
   const selected = select.value;
-  select.replaceChildren(new Option('Wybierz slicer', ''));
+  select.replaceChildren(new Option(t('chooseSlicer'), ''));
   for (const slicer of slicers) select.add(new Option(slicer.name, slicer.id));
   if ([...select.options].some(o => o.value === selected)) select.value = selected;
 }
@@ -60,7 +61,7 @@ async function fillFolder(path, container) {
   const items = await api('/api/list?path=' + encodeURIComponent(path));
   if (!items.length) {
     const empty = document.createElement('div');
-    empty.className = 'tree-row'; empty.textContent = 'Brak plików STL';
+    empty.className = 'tree-row'; empty.textContent = t('noFiles');
     container.append(empty);
   }
   for (const item of items) {
@@ -143,16 +144,16 @@ async function renderGrid() {
   const generation = ++gridGeneration;
   thumbnailObserver?.disconnect(); thumbnailQueue = [];
   const grid = $('grid'); grid.replaceChildren();
-  if (!state.root) { $('gridLocation').textContent = 'Wybierz bibliotekę'; return; }
+  if (!state.root) { $('gridLocation').textContent = t('chooseLibrary'); return; }
   const path = state.gridPath || state.root;
-  $('gridLocation').textContent = path === state.root ? 'Wszystkie modele' : path.split(/[\\/]/).filter(Boolean).at(-1);
+  $('gridLocation').textContent = path === state.root ? t('allModels') : path.split(/[\\/]/).filter(Boolean).at(-1);
   $('gridLocation').title = path;
   $('gridBack').disabled = path === state.root;
   const items = await api('/api/list?path=' + encodeURIComponent(path));
   if (generation !== gridGeneration || state.layout !== 'grid') return;
   if (!items.length) {
     const empty = document.createElement('div'); empty.className = 'grid-empty';
-    empty.textContent = 'Ten folder nie zawiera modeli STL ani podfolderów.'; grid.append(empty);
+    empty.textContent = t('emptyGrid'); grid.append(empty);
   }
   const observer = new IntersectionObserver(entries => {
     for (const entry of entries) {
@@ -223,7 +224,7 @@ function setClipboard(item, move) {
   if (move) document.querySelectorAll('.model-entry').forEach(row => {
     if (row.title === item.path) row.classList.add('cut-pending');
   });
-  notify(`${move ? 'Wycięto' : 'Skopiowano'}: ${item.name}. Wybierz folder i użyj „Wklej”.`);
+  notify(t('clipboardHint', { action: t(move ? 'cutDone' : 'copied'), name: item.name }));
 }
 function pasteDestination(item, destination) {
   if (item?.folder) return item.path;
@@ -241,20 +242,20 @@ async function pasteEntry(destination) {
       state.gridPath = replacePath(state.gridPath, source.path, result.path);
   }
   await refresh();
-  notify(`${source.move ? 'Przeniesiono' : 'Skopiowano'} do: ${result.path}`);
+  notify(t('pastedTo', { action: t(source.move ? 'moved' : 'copied'), path: result.path }));
 }
 function startRename(item, row) {
   if (!item) return;
   renameTarget = { item, row };
-  $('renameTitle').textContent = item.folder ? 'Zmień nazwę folderu' : 'Zmień nazwę modelu';
-  $('renameHint').textContent = item.folder ? 'Podaj nową nazwę folderu.' : 'Podaj nową nazwę. Rozszerzenie .stl zostanie zachowane.';
+  $('renameTitle').textContent = t(item.folder ? 'renameFolder' : 'renameModel');
+  $('renameHint').textContent = t(item.folder ? 'renameFolderHint' : 'renameHint');
   $('renameSuffix').classList.toggle('hidden', item.folder);
   $('newFileName').value = item.folder ? item.name : item.name.replace(/\.stl$/i, '');
   $('renameDialog').showModal();
   $('newFileName').focus(); $('newFileName').select();
 }
 async function trashEntry(item) {
-  if (!item || !confirm(`Przenieść ${item.folder ? 'folder' : 'model'} „${item.name}” do Kosza?`)) return;
+  if (!item || !confirm(t('confirmTrash', { type: t(item.folder ? 'folder' : 'model'), name: item.name }))) return;
   const view = state.layout === 'grid' ? $('grid') : $('tree');
   const scrollTop = view.scrollTop;
   const rows = [...view.querySelectorAll('.model-entry')].filter(row =>
@@ -279,7 +280,7 @@ async function trashEntry(item) {
     if (state.layout === 'grid') await renderGrid();
   } else if (state.layout === 'grid' && !view.querySelector('.model-entry')) {
     const empty = document.createElement('div'); empty.className = 'grid-empty';
-    empty.textContent = 'Ten folder nie zawiera modeli STL ani podfolderów.'; view.append(empty);
+    empty.textContent = t('emptyGrid'); view.append(empty);
   }
   view.scrollTop = scrollTop;
   if (selectionDeleted) {
@@ -298,7 +299,7 @@ async function trashEntry(item) {
     }
   }
   view.scrollTop = scrollTop;
-  notify('Przeniesiono do Kosza.');
+  notify(t('movedToTrash'));
 }
 $('tree').addEventListener('contextmenu', event => {
   if (!event.target.closest('.model-entry'))
@@ -325,7 +326,7 @@ document.addEventListener('click', event => { if (!$('contextMenu').contains(eve
 document.addEventListener('keydown', event => { if (event.key === 'Escape') hideContextMenu(); });
 document.querySelector('.sidebar').addEventListener('scroll', hideContextMenu, true);
 async function chooseModel(item, row) {
-  $('modelName').textContent = 'Wczytywanie modelu…';
+  $('modelName').textContent = t('loadingModel');
   await new Promise(resolve => requestAnimationFrame(resolve));
   let mesh;
   try {
@@ -342,13 +343,13 @@ async function chooseModel(item, row) {
   $('modelName').textContent = item.name;
   $('modelPath').textContent = item.path;
   $('dimensions').textContent = mesh.size.map(n => formatNumber(n)).join(' × ') + ' mm';
-  $('triangles').textContent = mesh.count.toLocaleString('pl-PL');
-  $('format').textContent = mesh.format;
+  $('triangles').textContent = mesh.count.toLocaleString(language === 'pl' ? 'pl-PL' : 'en-US');
+  $('format').textContent = t(mesh.format);
   for (const id of ['fileActions', 'viewControls', 'viewHint', 'modelFooter']) $(id).classList.remove('hidden');
   $('emptyState').classList.add('hidden');
   render();
 }
-function formatNumber(n) { return Number(n.toFixed(2)).toLocaleString('pl-PL'); }
+function formatNumber(n) { return Number(n.toFixed(2)).toLocaleString(language === 'pl' ? 'pl-PL' : 'en-US'); }
 
 const canvas = $('viewer'), viewer = new StlPreview(canvas);
 function render() { viewer.render(state); } 
@@ -371,7 +372,7 @@ async function chooseLibrary() {
   try {
     const result = await api('/api/choose-library', {});
     if (result) { clearModel(); await loadState(); return; }
-  } catch (e) { notify('Wybór folderu przez system jest niedostępny. Wpisz ścieżkę.', true); }
+  } catch (e) { notify(t('folderPickerUnavailable'), true); }
   $('libraryPath').value = state.root || '';
   $('pathDialog').showModal();
 }
@@ -405,31 +406,65 @@ $('renameDialog').addEventListener('close', () => run(async () => {
     $('modelPath').textContent = state.selected;
   }
   await refresh();
-  notify(`${target.item.folder ? 'Folder' : 'Model'} ma nową nazwę.`);
+  notify(t('renamed', { type: t(target.item.folder ? 'folderType' : 'modelType') }));
 }));
 $('copyButton').onclick = () => run(async () => {
   if (!state.selected) return;
   let result;
   try { result = await api('/api/copy', { path: state.selected }); }
   catch {
-    const destination = prompt('Podaj pełną ścieżkę do folderu docelowego:');
+    const destination = prompt(t('copyDestination'));
     if (!destination) return;
     result = await api('/api/copy', { path: state.selected, destination });
   }
-  if (result) notify('Skopiowano do: ' + result.path);
+  if (result) notify(t('copiedTo', { path: result.path }));
 });
 $('trashButton').onclick = () => run(() => trashEntry(state.selectedItem));
 $('addSlicer').onclick = () => { $('slicerPath').value = ''; $('slicerDialog').showModal(); };
 $('slicerDialog').addEventListener('close', () => run(async () => {
   if ($('slicerDialog').returnValue !== 'save') return;
   setSlicers(await api('/api/custom-slicer', { path: $('slicerPath').value }));
-  notify('Dodano slicer.');
+  notify(t('slicerAdded'));
 }));
 $('openSlicer').onclick = () => run(async () => {
   if (!state.selected) return;
-  if (!$('slicerSelect').value) throw Error('Wybierz slicer z listy.');
+  if (!$('slicerSelect').value) throw Error(t('chooseSlicerError'));
   await api('/api/slicer', { path: state.selected, slicerId: $('slicerSelect').value });
-  notify('Uruchomiono slicer.');
+  notify(t('slicerStarted'));
 });
+function refreshLanguage() {
+  applyLanguage();
+  if (!state.root) {
+    $('libraryName').textContent = t('noLibrary');
+    $('fileCount').textContent = t('chooseFolderHint');
+  }
+  if (!state.selected) $('modelName').textContent = t('chooseModel');
+  if (state.mesh) {
+    $('dimensions').textContent = state.mesh.size.map(n => formatNumber(n)).join(' × ') + ' mm';
+    $('triangles').textContent = state.mesh.count.toLocaleString(language === 'pl' ? 'pl-PL' : 'en-US');
+    $('format').textContent = t(state.mesh.format);
+  }
+  if (!$('renameDialog').open) {
+    $('renameTitle').textContent = t('renameModel');
+    $('renameHint').textContent = t('renameHint');
+  } else if (renameTarget) {
+    $('renameTitle').textContent = t(renameTarget.item.folder ? 'renameFolder' : 'renameModel');
+    $('renameHint').textContent = t(renameTarget.item.folder ? 'renameFolderHint' : 'renameHint');
+  }
+  const selectedSlicer = $('slicerSelect').value;
+  $('slicerSelect').options[0].textContent = t('chooseSlicer');
+  $('slicerSelect').value = selectedSlicer;
+  for (const row of $('tree').querySelectorAll('.tree-row:not(.model-entry)')) row.textContent = t('noFiles');
+  for (const row of $('grid').querySelectorAll('.grid-empty')) row.textContent = t('emptyGrid');
+  if (state.layout === 'grid') $('gridLocation').textContent = !state.root ? t('chooseLibrary') :
+    state.gridPath === state.root ? t('allModels') : state.gridPath?.split(/[\\/]/).filter(Boolean).at(-1) || '';
+}
+$('languageButton').onclick = () => run(async () => {
+  const next = language === 'en' ? 'pl' : 'en';
+  await api('/api/language', { language: next });
+  setLanguage(next);
+  refreshLanguage();
+});
+refreshLanguage();
 setLayout(state.layout, false);
 run(loadState);

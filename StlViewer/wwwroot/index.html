@@ -1,60 +1,61 @@
 <!doctype html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>STL Viewer — biblioteka modeli</title>
+  <title>STL Viewer — Model library</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <div class="app">
     <header class="topbar">
       <div class="brand"><span class="brand-icon">◈</span><span>STL<span class="brand-light">VIEWER</span></span></div>
-      <div class="top-actions"><span class="local-badge"><i></i> LOKALNIE</span><button id="chooseLibrary" class="primary">＋ &nbsp; Wybierz bibliotekę</button></div>
+      <div class="top-actions"><span class="local-badge"><i></i> <span data-i18n="local">LOCAL</span></span><button id="languageButton" class="language-button" type="button" aria-label="Switch to Polish" title="Switch to Polish">🇬🇧</button><button id="chooseLibrary" class="primary">＋ &nbsp; <span data-i18n="chooseLibrary">Choose library</span></button></div>
     </header>
     <main class="workspace">
       <aside class="sidebar">
-        <div class="sidebar-title"><span>EXPLORER</span><div class="sidebar-tools"><div class="view-toggle" role="group" aria-label="Widok biblioteki"><button id="listView" title="Widok listy" aria-label="Widok listy" aria-pressed="true">☷</button><button id="gridView" title="Widok siatki" aria-label="Widok siatki" aria-pressed="false">▦</button></div><button id="refresh" title="Odśwież bibliotekę" aria-label="Odśwież bibliotekę">↻</button></div></div>
-        <div class="library-title"><span>⌂</span><strong id="libraryName">Brak biblioteki</strong></div>
-        <div id="gridNavigation" class="grid-navigation hidden"><button id="gridBack" aria-label="Folder wyżej" title="Folder wyżej">←</button><span id="gridLocation"></span></div>
+        <div class="sidebar-title"><span>EXPLORER</span><div class="sidebar-tools"><div class="view-toggle" role="group" aria-label="Library view" data-i18n-aria="libraryView"><button id="listView" title="List view" aria-label="List view" data-i18n-title="listView" data-i18n-aria="listView" aria-pressed="true">☷</button><button id="gridView" title="Grid view" aria-label="Grid view" data-i18n-title="gridView" data-i18n-aria="gridView" aria-pressed="false">▦</button></div><button id="refresh" title="Refresh library" aria-label="Refresh library" data-i18n-title="refresh" data-i18n-aria="refresh">↻</button></div></div>
+        <div class="library-title"><span>⌂</span><strong id="libraryName">No library</strong></div>
+        <div id="gridNavigation" class="grid-navigation hidden"><button id="gridBack" aria-label="Parent folder" title="Parent folder" data-i18n-title="parentFolder" data-i18n-aria="parentFolder">←</button><span id="gridLocation"></span></div>
         <div id="tree" class="tree"></div>
         <div id="grid" class="grid hidden"></div>
-        <div class="sidebar-footer"><span id="fileCount">Wybierz folder z modelami STL</span></div>
+        <div class="sidebar-footer"><span id="fileCount">Choose a folder with STL models</span></div>
       </aside>
       <section class="detail">
         <div class="detail-header">
-          <div><div class="eyebrow">PODGLĄD MODELU</div><h1 id="modelName">Wybierz model z biblioteki</h1><div id="modelPath" class="path"></div></div>
+          <div><div class="eyebrow" data-i18n="modelPreview">MODEL PREVIEW</div><h1 id="modelName">Choose a model from the library</h1><div id="modelPath" class="path"></div></div>
           <div id="fileActions" class="file-actions hidden">
-            <button id="renameButton" title="Zmień nazwę pliku STL">✎ <span>Zmień nazwę</span></button>
-            <button id="copyButton" title="Skopiuj plik do innego folderu">⧉ <span>Kopiuj</span></button>
-            <button id="trashButton" class="danger" title="Przenieś plik do kosza">♧ <span>Do kosza</span></button>
+            <button id="renameButton" title="Rename STL file" data-i18n-title="renameFileTitle">✎ <span data-i18n="rename">Rename</span></button>
+            <button id="copyButton" title="Copy file to another folder" data-i18n-title="copyFileTitle">⧉ <span data-i18n="copy">Copy</span></button>
+            <button id="trashButton" class="danger" title="Move file to Trash" data-i18n-title="trashFileTitle">♧ <span data-i18n="trash">To Trash</span></button>
           </div>
         </div>
         <div class="viewer-wrap">
           <canvas id="viewer"></canvas>
-          <div id="emptyState" class="empty-state"><div class="empty-icon">⬡</div><h2>Twoja przestrzeń na modele</h2><p>Wybierz bibliotekę i kliknij plik STL po lewej, aby zobaczyć go tutaj.</p><button id="emptyChoose">Wybierz folder →</button></div>
-          <div id="viewControls" class="view-controls hidden"><button id="resetView" title="Wycentruj model">⌖</button><button id="zoomIn" title="Przybliż">＋</button><button id="zoomOut" title="Oddal">－</button></div>
-          <div id="viewHint" class="view-hint hidden">PRZECIĄGNIJ, ABY OBRÓCIĆ · ROLKA, ABY PRZYBLIŻYĆ</div>
+          <div id="emptyState" class="empty-state"><div class="empty-icon">⬡</div><h2 data-i18n="emptyTitle">Your space for models</h2><p data-i18n="emptyDescription">Choose a library and click an STL file on the left to preview it here.</p><button id="emptyChoose" data-i18n="chooseFolder">Choose folder →</button></div>
+          <div id="viewControls" class="view-controls hidden"><button id="resetView" title="Center model" data-i18n-title="centerModel">⌖</button><button id="zoomIn" title="Zoom in" data-i18n-title="zoomIn">＋</button><button id="zoomOut" title="Zoom out" data-i18n-title="zoomOut">－</button></div>
+          <div id="viewHint" class="view-hint hidden" data-i18n="viewHint">DRAG TO ROTATE · SCROLL TO ZOOM</div>
         </div>
         <div id="modelFooter" class="model-footer hidden">
-          <div class="stats"><div><small>WYMIARY</small><strong id="dimensions">—</strong></div><div><small>TRÓJKĄTY</small><strong id="triangles">—</strong></div><div><small>FORMAT</small><strong id="format">—</strong></div></div>
-          <div class="slicer-actions"><select id="slicerSelect"><option value="">Wybierz slicer</option></select><button id="addSlicer" title="Dodaj program lub AppImage slicera">＋</button><button id="openSlicer" class="primary">Otwórz w slicerze ↗</button></div>
+          <div class="stats"><div><small data-i18n="dimensions">DIMENSIONS</small><strong id="dimensions">—</strong></div><div><small data-i18n="triangles">TRIANGLES</small><strong id="triangles">—</strong></div><div><small data-i18n="format">FORMAT</small><strong id="format">—</strong></div></div>
+          <div class="slicer-actions"><select id="slicerSelect"><option value="">Choose slicer</option></select><button id="addSlicer" title="Add a slicer program or AppImage" data-i18n-title="addSlicerTitle">＋</button><button id="openSlicer" class="primary" data-i18n="openSlicer">Open in slicer ↗</button></div>
         </div>
       </section>
     </main>
     <div id="toast" class="toast hidden"></div>
-    <div id="contextMenu" class="context-menu hidden" role="menu" aria-label="Operacje na pliku lub folderze">
-      <button data-action="rename" role="menuitem">Zmień nazwę</button>
-      <button data-action="copy" role="menuitem">Kopiuj</button>
-      <button data-action="cut" role="menuitem">Wytnij</button>
-      <button data-action="paste" role="menuitem">Wklej</button>
+    <div id="contextMenu" class="context-menu hidden" role="menu" aria-label="File or folder actions" data-i18n-aria="contextLabel">
+      <button data-action="rename" role="menuitem" data-i18n="rename">Rename</button>
+      <button data-action="copy" role="menuitem" data-i18n="copy">Copy</button>
+      <button data-action="cut" role="menuitem" data-i18n="cut">Cut</button>
+      <button data-action="paste" role="menuitem" data-i18n="paste">Paste</button>
       <div class="context-divider"></div>
-      <button data-action="delete" class="danger" role="menuitem">Usuń do Kosza</button>
+      <button data-action="delete" class="danger" role="menuitem" data-i18n="delete">Move to Trash</button>
     </div>
   </div>
-  <dialog id="pathDialog"><form method="dialog"><h2>Wybierz bibliotekę</h2><p>Podaj pełną ścieżkę do folderu z modelami STL.</p><input id="libraryPath" placeholder="/home/użytkownik/Modele" autocomplete="off"><div class="dialog-actions"><button value="cancel">Anuluj</button><button id="saveLibrary" value="save" class="primary">Otwórz folder</button></div></form></dialog>
-  <dialog id="slicerDialog"><form method="dialog"><h2>Dodaj slicer</h2><p>Podaj pełną ścieżkę do programu lub pliku AppImage. Musi mieć uprawnienie do uruchamiania.</p><input id="slicerPath" placeholder="/home/użytkownik/Downloads/OrcaSlicer.AppImage" autocomplete="off"><div class="dialog-actions"><button value="cancel">Anuluj</button><button value="save" class="primary">Dodaj</button></div></form></dialog>
-  <dialog id="renameDialog"><form method="dialog"><h2 id="renameTitle">Zmień nazwę modelu</h2><p id="renameHint">Podaj nową nazwę. Rozszerzenie .stl zostanie zachowane.</p><div class="rename-input"><input id="newFileName" maxlength="240" autocomplete="off" required><span id="renameSuffix">.stl</span></div><div class="dialog-actions"><button value="cancel">Anuluj</button><button value="save" class="primary">Zapisz nazwę</button></div></form></dialog>
+  <dialog id="pathDialog"><form method="dialog"><h2 data-i18n="chooseLibraryTitle">Choose library</h2><p data-i18n="chooseLibraryDescription">Enter the full path to a folder containing STL models.</p><input id="libraryPath" placeholder="/home/user/Models" data-i18n-placeholder="libraryPlaceholder" autocomplete="off"><div class="dialog-actions"><button value="cancel" data-i18n="cancel">Cancel</button><button id="saveLibrary" value="save" class="primary" data-i18n="openFolder">Open folder</button></div></form></dialog>
+  <dialog id="slicerDialog"><form method="dialog"><h2 data-i18n="addSlicer">Add slicer</h2><p data-i18n="addSlicerDescription">Enter the full path to a program or AppImage. It must be executable.</p><input id="slicerPath" placeholder="/home/user/Downloads/OrcaSlicer.AppImage" data-i18n-placeholder="slicerPlaceholder" autocomplete="off"><div class="dialog-actions"><button value="cancel" data-i18n="cancel">Cancel</button><button value="save" class="primary" data-i18n="add">Add</button></div></form></dialog>
+  <dialog id="renameDialog"><form method="dialog"><h2 id="renameTitle">Rename model</h2><p id="renameHint">Enter a new name. The .stl extension will be preserved.</p><div class="rename-input"><input id="newFileName" maxlength="240" autocomplete="off" required><span id="renameSuffix">.stl</span></div><div class="dialog-actions"><button value="cancel" data-i18n="cancel">Cancel</button><button value="save" class="primary" data-i18n="saveName">Save name</button></div></form></dialog>
+  <script src="/i18n.js"></script>
   <script src="/viewer.js"></script>
   <script src="/thumb.js"></script>
   <script src="/app.js"></script>
